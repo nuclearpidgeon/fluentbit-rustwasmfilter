@@ -1,0 +1,12 @@
+[package]
+name = "fluentbit-rustwasmfilter"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+# Fluentbit WASM filters have to be built as a library that function names
+# are searched for within
+crate-type = ["cdylib"]
+path = "src/wasmfilter.rs"
+
+[dependencies]
