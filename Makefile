@@ -9,11 +9,18 @@ ifeq ("$(shell docker images -q ${DOCKER_IMAGE_NAME} 2> /dev/null)","")
 endif
 
 build:
-	cargo build
+	# Debug builds for whatever reason seem to use a tonne of stack space that
+	# causes "wasm operand stack overflow" errors in the msgpack hello world
+	# example specifically, so build in release by default.
+	# (Fluentbit currently only gives 8kb of stack and heap to the WASM
+	# execution context for its WASM filter:
+	# https://github.com/fluent/fluent-bit/blob/v3.1.3/src/wasm/flb_wasm.c#L87
+	# )
+	cargo build --release
 
 test_json: test_deps build
 	docker run --rm \
-		--mount type=bind,source=$(shell pwd)/target/wasm32-unknown-unknown/debug,target=/build_out \
+		--mount type=bind,source=$(shell pwd)/target/wasm32-unknown-unknown/release,target=/build_out \
 		${DOCKER_IMAGE_NAME} \
 		/opt/fluent-bit/bin/fluent-bit \
 			-i dummy \
@@ -21,7 +28,7 @@ test_json: test_deps build
 			-o stdout -m '*'
 test_msgpack: test_deps build
 	docker run --rm \
-		--mount type=bind,source=$(shell pwd)/target/wasm32-unknown-unknown/debug,target=/build_out \
+		--mount type=bind,source=$(shell pwd)/target/wasm32-unknown-unknown/release,target=/build_out \
 		${DOCKER_IMAGE_NAME} \
 		/opt/fluent-bit/bin/fluent-bit \
 			-i dummy \
