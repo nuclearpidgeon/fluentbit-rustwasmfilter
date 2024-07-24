@@ -11,11 +11,19 @@ endif
 build:
 	cargo build
 
-test: test_deps build
+test_json: test_deps build
 	docker run --rm \
 		--mount type=bind,source=$(shell pwd)/target/wasm32-unknown-unknown/debug,target=/build_out \
 		${DOCKER_IMAGE_NAME} \
 		/opt/fluent-bit/bin/fluent-bit \
 			-i dummy \
 			-F wasm -p event_format=json -p wasm_path=/build_out/fluentbit_rustwasmfilter.wasm -p function_name=hello_world__json -m '*' \
+			-o stdout -m '*'
+test_msgpack: test_deps build
+	docker run --rm \
+		--mount type=bind,source=$(shell pwd)/target/wasm32-unknown-unknown/debug,target=/build_out \
+		${DOCKER_IMAGE_NAME} \
+		/opt/fluent-bit/bin/fluent-bit \
+			-i dummy \
+			-F wasm -p event_format=msgpack -p wasm_path=/build_out/fluentbit_rustwasmfilter.wasm -p function_name=hello_world__msgpack -m '*' \
 			-o stdout -m '*'
